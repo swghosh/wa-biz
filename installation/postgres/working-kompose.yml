@@ -266,7 +266,6 @@ metadata:
   name: waweb
   namespace: whatsapp-client-containers
 spec:
-  serviceAccountName: whatsapp
   replicas: 1
   selector:
     matchLabels:
@@ -283,6 +282,7 @@ spec:
         io.kompose.network/postgres-default: "true"
         io.kompose.service: waweb
     spec:
+      serviceAccountName: whatsapp
       containers:
         - args:
             - /opt/whatsapp/bin/wait_on_postgres.sh
