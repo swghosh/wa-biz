@@ -3,9 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    kompose.cmd: kompose convert -f /home/swghosh/Desktop/WhatsApp-Business-API-Setup-Scripts/installation/postgres/docker-compose.yml --out 1.yaml --namespace whatsapp-client-containers
     kompose.version: 1.30.0 (9d8dcb518)
-  creationTimestamp: null
   labels:
     io.kompose.service: db
   name: db
@@ -19,15 +17,12 @@ spec:
     io.kompose.service: db
 status:
   loadBalancer: {}
-
 ---
 apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    kompose.cmd: kompose convert -f /home/swghosh/Desktop/WhatsApp-Business-API-Setup-Scripts/installation/postgres/docker-compose.yml --out 1.yaml --namespace whatsapp-client-containers
     kompose.version: 1.30.0 (9d8dcb518)
-  creationTimestamp: null
   labels:
     io.kompose.service: waweb
   name: waweb
@@ -41,15 +36,12 @@ spec:
     io.kompose.service: waweb
 status:
   loadBalancer: {}
-
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    kompose.cmd: kompose convert -f /home/swghosh/Desktop/WhatsApp-Business-API-Setup-Scripts/installation/postgres/docker-compose.yml --out 1.yaml --namespace whatsapp-client-containers
     kompose.version: 1.30.0 (9d8dcb518)
-  creationTimestamp: null
   labels:
     io.kompose.service: db
   name: db
@@ -64,9 +56,7 @@ spec:
   template:
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f /home/swghosh/Desktop/WhatsApp-Business-API-Setup-Scripts/installation/postgres/docker-compose.yml --out 1.yaml --namespace whatsapp-client-containers
         kompose.version: 1.30.0 (9d8dcb518)
-      creationTimestamp: null
       labels:
         io.kompose.network/postgres-default: "true"
         io.kompose.service: db
@@ -121,12 +111,10 @@ spec:
           persistentVolumeClaim:
             claimName: postgresdata
 status: {}
-
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  creationTimestamp: null
   labels:
     io.kompose.service: postgresdata
   name: postgresdata
@@ -138,15 +126,12 @@ spec:
     requests:
       storage: 100Mi
 status: {}
-
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    kompose.cmd: kompose convert -f /home/swghosh/Desktop/WhatsApp-Business-API-Setup-Scripts/installation/postgres/docker-compose.yml --out 1.yaml --namespace whatsapp-client-containers
     kompose.version: 1.30.0 (9d8dcb518)
-  creationTimestamp: null
   labels:
     io.kompose.service: wacore
   name: wacore
@@ -162,7 +147,6 @@ spec:
   template:
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f /home/swghosh/Desktop/WhatsApp-Business-API-Setup-Scripts/installation/postgres/docker-compose.yml --out 1.yaml --namespace whatsapp-client-containers
         kompose.version: 1.30.0 (9d8dcb518)
       creationTimestamp: null
       labels:
@@ -219,7 +203,6 @@ spec:
           persistentVolumeClaim:
             claimName: whatsappmedia
 status: {}
-
 ---
 apiVersion: v1
 data:
@@ -230,17 +213,14 @@ data:
   WA_DB_USERNAME: root
 kind: ConfigMap
 metadata:
-  creationTimestamp: null
   labels:
     io.kompose.service: wacore-db-env
   name: db-env
   namespace: whatsapp-client-containers
-
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  creationTimestamp: null
   labels:
     io.kompose.service: whatsappmedia
   name: whatsappmedia
@@ -252,15 +232,12 @@ spec:
     requests:
       storage: 100Mi
 status: {}
-
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    kompose.cmd: kompose convert -f /home/swghosh/Desktop/WhatsApp-Business-API-Setup-Scripts/installation/postgres/docker-compose.yml --out 1.yaml --namespace whatsapp-client-containers
     kompose.version: 1.30.0 (9d8dcb518)
-  creationTimestamp: null
   labels:
     io.kompose.service: waweb
   name: waweb
@@ -275,9 +252,7 @@ spec:
   template:
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f /home/swghosh/Desktop/WhatsApp-Business-API-Setup-Scripts/installation/postgres/docker-compose.yml --out 1.yaml --namespace whatsapp-client-containers
         kompose.version: 1.30.0 (9d8dcb518)
-      creationTimestamp: null
       labels:
         io.kompose.network/postgres-default: "true"
         io.kompose.service: waweb
@@ -339,4 +314,3 @@ spec:
           persistentVolumeClaim:
             claimName: whatsappmedia
 status: {}
-
