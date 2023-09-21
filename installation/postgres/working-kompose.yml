@@ -1,0 +1,342 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f /home/swghosh/Desktop/WhatsApp-Business-API-Setup-Scripts/installation/postgres/docker-compose.yml --out 1.yaml --namespace whatsapp-client-containers
+    kompose.version: 1.30.0 (9d8dcb518)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: db
+  name: db
+  namespace: whatsapp-client-containers
+spec:
+  ports:
+    - name: "3306"
+      port: 3306
+      targetPort: 3306
+  selector:
+    io.kompose.service: db
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f /home/swghosh/Desktop/WhatsApp-Business-API-Setup-Scripts/installation/postgres/docker-compose.yml --out 1.yaml --namespace whatsapp-client-containers
+    kompose.version: 1.30.0 (9d8dcb518)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: waweb
+  name: waweb
+  namespace: whatsapp-client-containers
+spec:
+  ports:
+    - name: "9090"
+      port: 9090
+      targetPort: 443
+  selector:
+    io.kompose.service: waweb
+status:
+  loadBalancer: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f /home/swghosh/Desktop/WhatsApp-Business-API-Setup-Scripts/installation/postgres/docker-compose.yml --out 1.yaml --namespace whatsapp-client-containers
+    kompose.version: 1.30.0 (9d8dcb518)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: db
+  name: db
+  namespace: whatsapp-client-containers
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: db
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f /home/swghosh/Desktop/WhatsApp-Business-API-Setup-Scripts/installation/postgres/docker-compose.yml --out 1.yaml --namespace whatsapp-client-containers
+        kompose.version: 1.30.0 (9d8dcb518)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/postgres-default: "true"
+        io.kompose.service: db
+    spec:
+      serviceAccountName: whatsapp
+      initContainers:
+      - name: chmod-er
+        image: busybox:latest
+        command:
+        - /bin/chown
+        - -R
+        - "1000"
+        - /var/lib/postgresql/data
+        volumeMounts:
+        - name: postgresdata  # or whatever
+          mountPath: /var/lib/postgresql/data
+      containers:
+        - args:
+            - -p
+            - "3306"
+            - -N
+            - "500"
+          env:
+            - name: POSTGRES_PASSWORD
+              value: testpass
+            - name: POSTGRES_USER
+              value: root
+          image: postgres:13.8
+          name: db
+          ports:
+            - containerPort: 3306
+              # hostPort: 3306
+              protocol: TCP
+          resources: {}
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 1000
+            seLinuxOptions:
+              level: 's0:c26,c20'
+            fsGroup: 1000690000
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - MKNOD
+          volumeMounts:
+            - mountPath: /var/lib/postgresql
+              name: postgresdata
+      restartPolicy: Always
+      volumes:
+        - name: postgresdata
+          persistentVolumeClaim:
+            claimName: postgresdata
+status: {}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: postgresdata
+  name: postgresdata
+  namespace: whatsapp-client-containers
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f /home/swghosh/Desktop/WhatsApp-Business-API-Setup-Scripts/installation/postgres/docker-compose.yml --out 1.yaml --namespace whatsapp-client-containers
+    kompose.version: 1.30.0 (9d8dcb518)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: wacore
+  name: wacore
+  namespace: whatsapp-client-containers
+spec:
+  serviceAccountName: whatsapp
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: wacore
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f /home/swghosh/Desktop/WhatsApp-Business-API-Setup-Scripts/installation/postgres/docker-compose.yml --out 1.yaml --namespace whatsapp-client-containers
+        kompose.version: 1.30.0 (9d8dcb518)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/postgres-default: "true"
+        io.kompose.service: wacore
+    spec:
+      containers:
+        - args:
+            - /opt/whatsapp/bin/wait_on_postgres.sh
+            - /opt/whatsapp/bin/launch_within_docker.sh
+          env:
+            - name: ORCHESTRATION
+              value: DOCKER-COMPOSE
+            - name: WA_DB_ENGINE
+              valueFrom:
+                configMapKeyRef:
+                  key: WA_DB_ENGINE
+                  name: db-env
+            - name: WA_DB_HOSTNAME
+              valueFrom:
+                configMapKeyRef:
+                  key: WA_DB_HOSTNAME
+                  name: db-env
+            - name: WA_DB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: WA_DB_PASSWORD
+                  name: db-env
+            - name: WA_DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  key: WA_DB_PORT
+                  name: db-env
+            - name: WA_DB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  key: WA_DB_USERNAME
+                  name: db-env
+            - name: WA_RUNNING_ENV_VERSION
+              value: v2.2.3
+          image: docker.whatsapp.biz/coreapp:v2.49.3
+          name: wacore
+          resources: {}
+          securityContext:
+            capabilities:
+              drop:
+                - MKNOD
+          volumeMounts:
+            - mountPath: /usr/local/wamedia
+              name: whatsappmedia
+      restartPolicy: Always
+      volumes:
+        - name: whatsappmedia
+          persistentVolumeClaim:
+            claimName: whatsappmedia
+status: {}
+
+---
+apiVersion: v1
+data:
+  WA_DB_ENGINE: PGSQL
+  WA_DB_HOSTNAME: db
+  WA_DB_PASSWORD: testpass
+  WA_DB_PORT: "3306"
+  WA_DB_USERNAME: root
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: wacore-db-env
+  name: db-env
+  namespace: whatsapp-client-containers
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: whatsappmedia
+  name: whatsappmedia
+  namespace: whatsapp-client-containers
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f /home/swghosh/Desktop/WhatsApp-Business-API-Setup-Scripts/installation/postgres/docker-compose.yml --out 1.yaml --namespace whatsapp-client-containers
+    kompose.version: 1.30.0 (9d8dcb518)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: waweb
+  name: waweb
+  namespace: whatsapp-client-containers
+spec:
+  serviceAccountName: whatsapp
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: waweb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f /home/swghosh/Desktop/WhatsApp-Business-API-Setup-Scripts/installation/postgres/docker-compose.yml --out 1.yaml --namespace whatsapp-client-containers
+        kompose.version: 1.30.0 (9d8dcb518)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/postgres-default: "true"
+        io.kompose.service: waweb
+    spec:
+      containers:
+        - args:
+            - /opt/whatsapp/bin/wait_on_postgres.sh
+            - /opt/whatsapp/bin/launch_within_docker.sh
+          env:
+            - name: ORCHESTRATION
+              value: DOCKER-COMPOSE
+            - name: WACORE_HOSTNAME
+              value: wacore
+            - name: WA_DB_ENGINE
+              valueFrom:
+                configMapKeyRef:
+                  key: WA_DB_ENGINE
+                  name: db-env
+            - name: WA_DB_HOSTNAME
+              valueFrom:
+                configMapKeyRef:
+                  key: WA_DB_HOSTNAME
+                  name: db-env
+            - name: WA_DB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: WA_DB_PASSWORD
+                  name: db-env
+            - name: WA_DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  key: WA_DB_PORT
+                  name: db-env
+            - name: WA_DB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  key: WA_DB_USERNAME
+                  name: db-env
+            - name: WA_RUNNING_ENV_VERSION
+              value: v2.2.3
+          image: docker.whatsapp.biz/web:v2.49.3
+          name: waweb
+          ports:
+            - containerPort: 443
+              # hostPort: 9090
+              protocol: TCP
+          resources: {}
+          securityContext:
+            capabilities:
+              drop:
+                - MKNOD
+          volumeMounts:
+            - mountPath: /usr/local/wamedia
+              name: whatsappmedia
+      restartPolicy: Always
+      volumes:
+        - name: whatsappmedia
+          persistentVolumeClaim:
+            claimName: whatsappmedia
+status: {}
+
