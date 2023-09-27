@@ -151,7 +151,7 @@ spec:
       port: 6253
       targetPort: 6253
   selector:
-    io.kompose.service: db
+    io.kompose.service: wacore
 status:
   loadBalancer: {}
 ---
