@@ -127,6 +127,34 @@ spec:
       storage: 100Mi
 status: {}
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.version: 1.30.0 (9d8dcb518)
+  labels:
+    io.kompose.service: wacore
+  name: wacore
+  namespace: whatsapp-client-containers
+spec:
+  ports:
+    - name: "6250"
+      port: 6250
+      targetPort: 6250
+    - name: "6251"
+      port: 6251
+      targetPort: 6251
+    - name: "6252"
+      port: 6252
+      targetPort: 6252
+    - name: "6253"
+      port: 6253
+      targetPort: 6253
+  selector:
+    io.kompose.service: db
+status:
+  loadBalancer: {}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -197,6 +225,11 @@ spec:
           volumeMounts:
             - mountPath: /usr/local/wamedia
               name: whatsappmedia
+          ports:
+            - containerPort: 6250
+            - containerPort: 6251
+            - containerPort: 6252
+            - containerPort: 6253
       restartPolicy: Always
       volumes:
         - name: whatsappmedia
